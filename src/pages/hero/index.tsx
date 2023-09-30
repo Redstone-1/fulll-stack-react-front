@@ -3,14 +3,14 @@ import type { FC, ReactElement } from 'react'
 import { Card, Form, Button, Table, Input, DatePicker, Radio, Image } from '@arco-design/web-react'
 import { Checkbox, Space, Select, Popconfirm, Upload, Modal, Message } from '@arco-design/web-react'
 import type { UploadItem } from '@arco-design/web-react/es/Upload'
-import { $get, $post } from '../../request'
+import { $post } from '@request'
 import { tableColumns } from './const'
 import type { SearchFormProps, HeroFormProps, TableRecordProps } from './types'
 import './index.css'
 
-const FormItem = Form.Item;
-const CheckboxGroup = Checkbox.Group;
-const RadioGroup = Radio.Group;
+const FormItem = Form.Item
+const CheckboxGroup = Checkbox.Group
+const RadioGroup = Radio.Group
 
 const modeMap = {
   add: '新增',
@@ -18,20 +18,20 @@ const modeMap = {
 }
 
 const Hero: FC = (): ReactElement => {
-  const [searchForm] = Form.useForm<SearchFormProps>();
-  const [heroForm] = Form.useForm<HeroFormProps>();
-  const [mode, setMode] = useState(modeMap.add);
-  const [record, setRecord] = useState<TableRecordProps>();
-  const [tableLoading, setTableLoading] = useState(false);
-  const [dataSource, setDataSource] = useState([]);
-  const [visible, setVisible] = useState(false);
-  const [fileList, setFileList] = useState<UploadItem[]>([]);
+  const [searchForm] = Form.useForm<SearchFormProps>()
+  const [heroForm] = Form.useForm<HeroFormProps>()
+  const [mode, setMode] = useState(modeMap.add)
+  const [record, setRecord] = useState<TableRecordProps>()
+  const [tableLoading, setTableLoading] = useState(false)
+  const [dataSource, setDataSource] = useState([])
+  const [visible, setVisible] = useState(false)
+  const [fileList, setFileList] = useState<UploadItem[]>([])
   const [pagination, setPagination] = useState({
     total: 0,
     current: 1,
     pageSize: 10,
-  });
-  const modeText = `${mode === modeMap.add ? modeMap.add : modeMap.update}`;
+  })
+  const modeText = `${mode === modeMap.add ? modeMap.add : modeMap.update}`
 
   useEffect(() => {
     onSearch()
@@ -58,7 +58,7 @@ const Hero: FC = (): ReactElement => {
         return (
           <Space>
             <Button type='primary' onClick={() => {
-              const { heroName, date, strongLevel, position, poster } = record;
+              const { heroName, date, strongLevel, position, poster } = record
               setMode(modeMap.update)
               setRecord(record)
               heroForm.setFieldsValue({ heroName, date, strongLevel, position, poster })
@@ -90,14 +90,14 @@ const Hero: FC = (): ReactElement => {
         if (!errors) {
           const res = await $post('/hero/getHeroList', params)
           if (res.code === 200 && res?.result?.data.length) {
-            setDataSource(res.result.data);
+            setDataSource(res.result.data)
             setPagination({
               ...pagination,
               total: res.result.total
             })
             setTableLoading(false)
           } else {
-            setDataSource([]);
+            setDataSource([])
             setTableLoading(false)
             setPagination({
               ...pagination,
@@ -107,7 +107,7 @@ const Hero: FC = (): ReactElement => {
           }
         }
       } catch (error) {
-        setDataSource([]);
+        setDataSource([])
         setPagination({
           ...pagination,
           total: 0
@@ -129,8 +129,6 @@ const Hero: FC = (): ReactElement => {
           })
           onSearch()
           setVisible(false)
-        } else {
-          Message.error(res.message || '操作失败，请重试')
         }
       }
     })
@@ -223,7 +221,13 @@ const Hero: FC = (): ReactElement => {
       </Form>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'end', margin: '10px 0 10px 0' }}>
         <Space>
-          <Button type='primary' onClick={() => { setMode(modeMap.add); setVisible(true) }}>新增</Button>
+          <Button
+            type='primary'
+            onClick={() => {
+              setMode(modeMap.add)
+              setVisible(true)
+            }}
+          >新增</Button>
         </Space>
       </div>
       <Table
@@ -357,7 +361,7 @@ const Hero: FC = (): ReactElement => {
                 listType='picture-card'
                 limit={3}
                 onExceedLimit={() => {
-                  Message.warning('超过上传数量限制！最多上传3个');
+                  Message.warning('超过上传数量限制！最多上传3个')
                 }}
               />
             </FormItem>
