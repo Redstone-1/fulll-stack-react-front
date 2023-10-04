@@ -16,12 +16,12 @@ const Login: FC = (): ReactElement => {
   const onLogin = () => {
     form.validate().then(async (values) => {
       setSubmitLoading(true)
-      const firstLogin = await $post('/users/login', values, false)
+      const firstLogin = await $post('/users/login', values, { checkToken: false })
       if (!firstLogin) {
         Message.info('用户不存在，正在为你自动注册...')
-        const registerRes = await $post('/users/register', values, false)
+        const registerRes = await $post('/users/register', values, { checkToken: false })
         if (registerRes) {
-          const secondLogin = await $post('/users/login', values, false)
+          const secondLogin = await $post('/users/login', values, { checkToken: false })
           if (secondLogin) {
             Message.success('登录成功！')
             localStorage.setItem('access_token', secondLogin.result.token)
@@ -46,7 +46,7 @@ const Login: FC = (): ReactElement => {
     >
       <div className='flex flex-row w-[560px] h-[420px] absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-60%] rounded-md shadow-2xl'>
         <div className='h-full w-full flex flex-col items-center p-[40px]'>
-          <div className='text-3xl mb-[40px] font-semibold'>欢迎回来</div>
+          <div className='text-3xl mb-[40px] font-semibold'>欢迎回来，请登录</div>
           <Form
             form={form}
             layout='vertical'

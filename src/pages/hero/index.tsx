@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import type { FC, ReactElement } from 'react'
-import { Card, Form, Button, Table, Input, DatePicker, Radio, Image } from '@arco-design/web-react'
+import { Card, Form, Button, Table, Input, DatePicker, Radio } from '@arco-design/web-react'
 import { Checkbox, Space, Select, Popconfirm, Upload, Modal, Message } from '@arco-design/web-react'
+import { IconDelete } from '@arco-design/web-react/icon'
 import type { UploadItem } from '@arco-design/web-react/es/Upload'
-import { $post } from '@request'
+import { $post, $upload } from '@request'
 import { tableColumns } from './const'
 import type { SearchFormProps, HeroFormProps, TableRecordProps } from './types'
 import './index.css'
@@ -37,13 +38,24 @@ const Hero: FC = (): ReactElement => {
     onSearch()
   }, [pagination.current, pagination.pageSize])
 
-  const onFinalDelete = async (record: TableRecordProps) => {
+  const onFinalDelete = async (row: TableRecordProps) => {
     setTableLoading(true)
-    const res = await $post('/hero/delete', { heroName: record.heroName })
+    const res = await $post('/hero/delete', { heroName: row.heroName })
     if (res.code === 200) {
       onSearch()
     } else {
       setTableLoading(false)
+    }
+  }
+
+  const getHeroInfo = async (heroId: string, imgIds: string) => {
+    try {
+      const res = await $post('/hero/getHero', { heroId, imgIds });
+      setRecord(res.result)
+      return res.result ?? false
+    } catch(err) {
+      console.log(err)
+      return false
     }
   }
 
@@ -54,21 +66,25 @@ const Hero: FC = (): ReactElement => {
       key: 'action',
       dataIndex: 'action',
       fixed: 'right',
-      render: (_: string, record: TableRecordProps) => {
+      render: (_: string, row: TableRecordProps) => {
         return (
           <Space>
-            <Button type='primary' onClick={() => {
-              const { heroName, date, strongLevel, position, poster } = record
-              setMode(modeMap.update)
-              setRecord(record)
-              heroForm.setFieldsValue({ heroName, date, strongLevel, position, poster })
-              setVisible(true)
-            }}>编辑</Button>
+            <Button
+              type='primary'
+              onClick={async () => {
+                setMode(modeMap.update)
+                const rowData = await getHeroInfo(row.heroId, row.imgIds)
+                if (!rowData) return
+                const { heroName, date, strongLevel, position }: any = rowData
+                await heroForm.setFieldsValue({ heroName, date, strongLevel, position })
+                setVisible(true)
+              }}
+            >编辑</Button>
             <Popconfirm
               focusLock
               title='删除英雄记录'
               content='确定删除这条英雄记录吗？'
-              onOk={() => onFinalDelete(record)}
+              onOk={() => onFinalDelete(row)}
             >
               <Button status='danger'>删除</Button>
             </Popconfirm>
@@ -119,8 +135,16 @@ const Hero: FC = (): ReactElement => {
 
   const onSaveHero = () => {
     heroForm.validate(async (errors, values) => {
+      console.log(
+        '%c log-by-xier %c [fileList, record] ',
+        'background: #41b883; padding: 6px; border-radius: 1px 0 0 1px;  color: #fff',
+        'background: #35495e; padding: 6px; border-radius: 0 1px 1px 0;  color: #fff',
+        [fileList, record]
+      );
       if (!errors) {
-        const res = await $post(`/hero/${mode === modeMap.add ? 'create' : 'update'}`, values)
+        const ids = fileList.filter(file => file.status === 'done').map((img: any) => img?.originFile?.response) || ''
+        const imgIds = record?.imgIds ? (record?.imgIds + ',' + ids.join(',')) : ids.join(',')
+        const res = await $post(`/hero/${mode === modeMap.add ? 'create' : 'update'}`, { ...values, imgIds, heroId: mode === modeMap.update ? record?.heroId : ''  })
         if (res.code === 200) {
           Message.success(`${modeText}英雄成功！`)
           setPagination({
@@ -149,6 +173,40 @@ const Hero: FC = (): ReactElement => {
 
   const onFileChange = (fileList: UploadItem[]) => {
     setFileList(fileList)
+  }
+
+  const customUpload = async ({ onError, onSuccess, file }: any) => {
+    try {
+      const res = await $upload('/hero/upload', file)
+      if (res) {
+        file.response = res.result
+        Message.success('图片上传成功')
+        onSuccess()
+      } else {
+        onError()
+      }
+    } catch (error) {
+      onError()
+      console.info(
+        '%c error ',
+        'background-color: #f44336; padding: 6px 12px; border-radius: 2px; font-size: 14px; color: #fff; font-weight: 600;',
+        error
+      );
+    }
+  }
+
+  const onDeletePoster = (img: any) => {
+    try {
+      const newHeroImage = record?.heroImage?.filter(i => i.imgName !== img.imgName)
+      const newImgIds = newHeroImage?.map(it => it.imgId) || []
+      setRecord({
+        ...record,
+        imgIds: newImgIds?.join(','),
+        heroImage: newHeroImage,
+      } as any)
+    } catch (error) {
+      console.error('英雄海报删除失败', error)
+    }
   }
 
   return (
@@ -272,8 +330,9 @@ const Hero: FC = (): ReactElement => {
             date: '',
             strongLevel: '',
             position: '',
-            poster: []
-          })
+            imgIds: [],
+            heroImage: []
+          } as any)
         }}
         okText={modeText}
         autoFocus={false}
@@ -344,26 +403,42 @@ const Hero: FC = (): ReactElement => {
             </FormItem>
             <FormItem
               label='英雄海报'
-              field='poster'
+              field=''
+              rules={[
+                { required: true, validator: (_, callback) => fileList.length ? callback() : callback('英雄图片必填') },
+              ]}
             >
+              <div style={{ display: 'flex' }}>
+                {
+                  (record?.heroImage?.length as number > 0) && mode === modeMap.update && (
+                    record?.heroImage?.map((img) => (
+                      <div className="flex flex-col items-center mr-[10px] mb-[10px]">
+                        <img
+                          style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                          src={`http://localhost:6419/${img.imgName}`}
+                        />
+                        <div className="bg-slate-100 w-full flex justify-center p-[4px] cursor-pointer" onClick={() => onDeletePoster(img)}><IconDelete style={{ filter: 'opacity(0.6)' }} /></div>
+                      </div>
+                    ))
+                  )
+                }
+              </div>
               {
-                record?.poster?.length as number > 0 && (
-                  <Image src='' />
-                )
+                (mode === modeMap.add ? fileList : record?.heroImage)?.length as number < 3 &&
+                <Upload
+                  accept='.jpg,.jpeg,.png'
+                  fileList={fileList}
+                  onChange={onFileChange}
+                  multiple
+                  imagePreview
+                  listType='picture-card'
+                  limit={3}
+                  onExceedLimit={() => {
+                    Message.warning('超过上传数量限制！最多上传3个')
+                  }}
+                  customRequest={customUpload}
+                />
               }
-              <Upload
-                accept='.jpg,.jpeg,.png'
-                fileList={fileList}
-                onChange={onFileChange}
-                multiple
-                imagePreview
-                action='/'
-                listType='picture-card'
-                limit={3}
-                onExceedLimit={() => {
-                  Message.warning('超过上传数量限制！最多上传3个')
-                }}
-              />
             </FormItem>
           </Form>
       </Modal>

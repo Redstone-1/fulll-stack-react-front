@@ -5,6 +5,12 @@ export interface SearchFormProps {
   position: '1' | '2' | '3' | '4' | '5' | ''
 }
 export interface HeroFormProps extends SearchFormProps {
-  poster: any[],
+  imgIds: string,
 }
-export interface TableRecordProps extends HeroFormProps {}
+export interface TableRecordProps extends HeroFormProps {
+  heroId: string;
+  imgIds: string,
+  heroImage: Record<string, string>[] | undefined;
+  createdAt?: string;
+  updatedAt?: string;
+}
