@@ -69,7 +69,7 @@ class Request {
           const verify = await this.verifyToken(true)
           if (!verify) return
         }
-        Message.error({ content: final.message || '请求失败', duration: 3000 })
+        Message.error({ content: final.message || '请求失败' })
         return false
       }
       return final
@@ -106,7 +106,7 @@ class Request {
           const verify = await this.verifyToken(true)
           if (!verify) return
         }
-        Message.error({ content: final.message || '请求失败', duration: 3000 })
+        Message.error({ content: final.message || '请求失败' })
         return false
       }
       return final
@@ -144,7 +144,7 @@ class Request {
           const verify = await this.verifyToken(true)
           if (!verify) return
         }
-        Message.error({ content: final.message || '请求失败', duration: 3000 })
+        Message.error({ content: final.message || '请求失败' })
         return false
       }
       return final

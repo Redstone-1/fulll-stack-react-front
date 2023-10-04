@@ -7,6 +7,7 @@ import type { UploadItem } from '@arco-design/web-react/es/Upload'
 import { $post, $upload } from '@request'
 import { tableColumns } from './const'
 import type { SearchFormProps, HeroFormProps, TableRecordProps } from './types'
+import { useUserStore } from '@store'
 import './index.css'
 
 const FormItem = Form.Item
@@ -32,6 +33,7 @@ const Hero: FC = (): ReactElement => {
     current: 1,
     pageSize: 10,
   })
+  const userName = useUserStore(state => state.userName)
   const modeText = `${mode === modeMap.add ? modeMap.add : modeMap.update}`
 
   useEffect(() => {
@@ -213,6 +215,9 @@ const Hero: FC = (): ReactElement => {
     <Card
       title='数据面板'
       style={{ height: '100%' }}
+      extra={
+        <span className="text-base text-slate-800 font-semibold">欢迎回来！<span className="text-base text-blue-600 font-semibold">{userName}</span></span>
+      }
     >
       <Form
         form={searchForm}

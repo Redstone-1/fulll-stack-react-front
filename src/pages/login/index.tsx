@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Input, Message } from '@arco-design/web-react'
 import { Form, Button } from '@arco-design/web-react'
 import { IconUser, IconLock } from '@arco-design/web-react/icon'
+import { useUserStore } from '@store'
 import { $post } from '@request'
 
 const FormItem = Form.Item
@@ -12,6 +13,7 @@ const Login: FC = (): ReactElement => {
   const navigateTo = useNavigate()
   const [form] = Form.useForm()
   const [submitLoading, setSubmitLoading] = useState(false)
+  const setUserName = useUserStore(state => state.setUserName)
 
   const onLogin = () => {
     form.validate().then(async (values) => {
@@ -25,11 +27,13 @@ const Login: FC = (): ReactElement => {
           if (secondLogin) {
             Message.success('登录成功！')
             localStorage.setItem('access_token', secondLogin.result.token)
+            setUserName(secondLogin.result.userName)
             navigateTo('/hero')
           }
         }
       } else {
         localStorage.setItem('access_token', firstLogin.result.token)
+        setUserName(firstLogin.result.userName)
         navigateTo('/hero')
       }
       setSubmitLoading(false)
@@ -62,13 +66,13 @@ const Login: FC = (): ReactElement => {
                 { min: 6, message: '用户名至少 6 位', validateTrigger: 'onChange' },
               ]}
             >
-              <Input type='text' placeholder='请输入用户' allowClear maxLength={20} prefix={<IconLock />} />
+              <Input type='text' placeholder='用户名随意输入，会自动注册' allowClear maxLength={20} prefix={<IconLock />} />
             </FormItem>
             <FormItem
               label='密码'
               field='password'
               rules={[
-                {required: true, message: '密码必填!', validateTrigger: 'onChange'},
+                { required: true, message: '密码必填!', validateTrigger: 'onChange' },
                 { min: 4, message: '密码至少 4 位', validateTrigger: 'onChange' },
               ]}
             >

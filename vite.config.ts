@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
         '@utils': path.resolve(__dirname, './src/utils'),
         '@request': path.resolve(__dirname, './src/request'),
         '@routes': path.resolve(__dirname, './src/routes'),
+        '@store': path.resolve(__dirname, './src/store'),
       },
     }
   }

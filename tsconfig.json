@@ -30,6 +30,8 @@
       "@request/*": ["./src/request/*"],
       "@routes": ["./src/routes/index"],
       "@routes/*": ["./src/routes/*"],
+      "@store": ["./src/store/index"],
+      "@store/*": ["./src/store/*"],
     }
   },
   "include": ["src"],
